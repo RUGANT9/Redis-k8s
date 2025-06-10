@@ -5,7 +5,7 @@ metadata:
   name: redis
 spec:
     serviceName: "redis"
-    replicas: 1
+    replicas: 3
     selector:
       matchLabels:
         app: redis
@@ -20,6 +20,15 @@ spec:
             ports:
               - containerPort: 6379
             args: ["redis-server", "/etc/redis/redis.conf"]
+          - name: redis-exporter
+            image: oliver006/redis_exporter:v1.61.0
+            ports:
+              - containerPort: 9121
+            env:
+              - name: REDIS_ADDR
+                value: "redis://localhost:6379"
+              - name: REDIS_EXPORTER_WEB_LISTEN_ADDRESS
+                value: ":9121"
             volumeMounts:
               - name: redis-data
                 mountPath: /data
