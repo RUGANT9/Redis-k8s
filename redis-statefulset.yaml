@@ -4,30 +4,37 @@ kind: StatefulSet
 metadata:
   name: redis
 spec:
-  serviceName: "redis"  # must match headless service
-  replicas: 1
-  selector:
-    matchLabels:
-      app: redis
-  template:
-    metadata:
-      labels:
+    serviceName: "redis"
+    replicas: 1
+    selector:
+      matchLabels:
         app: redis
-    spec:
-      containers:
-        - name: redis
-          image: redis:7.2
-          ports:
-            - containerPort: 6379
-          volumeMounts:
-            - name: redis-data
-              mountPath: /data
-          args: ["--appendonly", "yes"]  # enable Redis persistence
-  volumeClaimTemplates:
-    - metadata:
-        name: redis-data
+    template:
+      metadata:
+        labels:
+          app: redis
       spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 1Gi
+        containers:
+          - name: redis
+            image: redis:7.2
+            ports:
+              - containerPort: 6379
+            args: ["redis-server", "/etc/redis/redis.conf"]
+            volumeMounts:
+              - name: redis-data
+                mountPath: /data
+              - name: redis-config-volume
+                mountPath: /etc/redis
+                readOnly: true
+        volumes:
+          - name: redis-config-volume
+            configMap:
+              name: redis-config
+    volumeClaimTemplates:
+      - metadata:
+          name: redis-data
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
